@@ -70,18 +70,18 @@ def eigenvalues(Bxyz,zf):
     # this leads to an error in the calculation of the splittings:
     # it is not currently possible to distinguish between B parallel to NV
     # and B antiparallel to NV
-    w, v = LA.eigh(zfs1+strain1+zeeman)
+    w = LA.eigvalsh(zfs1+strain1+zeeman)
     f1 = w[:,:,1] - w[:,:,0]
     f2 = w[:,:,2] - w[:,:,0]
-    w, v = LA.eigh(zfs2+strain2+zeeman)
-    f3 = (abs(w[:,:,0])+abs(w[:,:,1]))
-    f4 = (abs(w[:,:,0])+abs(w[:,:,2]))
-    w, v = LA.eigh(zfs3+strain3+zeeman)
-    f5 = (abs(w[:,:,0])+abs(w[:,:,1]))
-    f6 = (abs(w[:,:,0])+abs(w[:,:,2]))
-    w, v = LA.eigh(zfs4+strain4+zeeman)
-    f7 = (abs(w[:,:,0])+abs(w[:,:,1]))
-    f8 = (abs(w[:,:,0])+abs(w[:,:,2]))
+    w = LA.eigvalsh(zfs2+strain2+zeeman)
+    f3 = w[:,:,1] - w[:,:,0]
+    f4 = w[:,:,2] - w[:,:,0]
+    w = LA.eigvalsh(zfs3+strain3+zeeman)
+    f5 = w[:,:,1] - w[:,:,0]
+    f6 = w[:,:,2] - w[:,:,0]
+    w = LA.eigvalsh(zfs4+strain4+zeeman)
+    f7 = w[:,:,1] - w[:,:,0]
+    f8 = w[:,:,2] - w[:,:,0]
     evals = np.dstack([f1,f2,f3,f4,f5,f6,f7,f8]).reshape(len(Bxyztmp),\
                                 len(Bxyztmp[0]),1,8)
 ##    evals = np.sort(evals,axis=2).reshape(len(Bxyztmp),\
@@ -141,18 +141,6 @@ def lor8(freq,zf,ev):
 
 
 
-############################################
-# Define theta, phi, Bmag arrays to calculate eigenvalues
-############################################
-##theta = np.linspace(0.00,np.pi,num=40)
-##phi = np.linspace(0,2*np.pi,num=40)
-####theta = np.array([0,np.pi/2])
-####phi = np.array([0])
-####Bmag = np.linspace(0,150e-6,2)
-##Bmag = np.array([150e-6])
-##Bmag = Bmag.reshape(len(Bmag),1,1)
-##Bxyz = s2c(theta,phi,Bmag)
-##ev = eigenvalues(Bxyz)
 
 ############################################
 # Calculate and plot NV splittings as a function of theta and phi
@@ -221,21 +209,6 @@ def plotsplittings(phi,theta,zf):
 
 
 
-############################################
-# Current problem to solve:
-# How to characterize small field spectra from splitting and width?
-# hrm...
-# the splitting places a range on the magnetic field magnitude
-# if the width has changed, this Bmag is not Bz
-# plug in B corresponding to fitting, rotate this Bmag, and fit to data?
-############################################
-##freq = np.linspace(2.77e9,2.97e9,1e6)
-##zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
-##spectra = lor8(freq,zf,ev)
-##print freq.shape
-##print spectra.shape
-##plt.plot(freq,spectra[0,0,0,:])
-##plt.show()
 
 
 ############################################
@@ -284,51 +257,107 @@ def swth(phi,theta,zf,freq):
 ##        print coeffs[i]
 ##        plt.plot(freq[i],spectra[i,:],'r-',freq[i],yfit,'b--')
 ##        plt.show()
-    np.savetxt('coeffs.txt',coeffs,delimiter=', ')
+    np.savetxt('coeffs_t40p40.txt',coeffs,delimiter=', ')
+    print datetime.datetime.now()
 
-    
-    
 freq = np.linspace(2.77e9,2.97e9,1e6)
 zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
-theta = np.linspace(0.001,np.pi,num=13)
-phi = np.linspace(0.001,2*np.pi,num=17)
-##swth(phi,theta,zf,freq)
-
-a1,a2,zfcentral,zfsplitting,zfwidth,zfoffset =\
-    np.loadtxt('coeffs.txt',delimiter=', ',unpack=True)
-
-print zfsplitting.shape
-print theta.shape
-print phi.shape
-fig = plt.figure(figsize=plt.figaspect(1.))
-
-ax = fig.add_subplot(211)
-X = np.degrees(phi)
-Y = np.degrees(theta)
-X, Y = np.meshgrid(X,Y)
-Z = zfsplitting.reshape(len(theta),len(phi))
-plt.contourf(X,Y,Z,100)
-plt.colorbar()
-ax.set_title('Splitting')
-ax.set_xlabel('phi (degrees)')
-ax.set_ylabel('theta (degrees)')
-
-ax = fig.add_subplot(212)
-X = np.degrees(phi)
-Y = np.degrees(theta)
-X, Y = np.meshgrid(X,Y)
-Z = zfwidth.reshape(len(theta),len(phi))
-plt.contourf(X,Y,Z,100)
-plt.colorbar()
-ax.set_title('Width')
-ax.set_xlabel('phi (degrees)')
-ax.set_ylabel('theta (degrees)')
-
-plt.subplots_adjust(wspace=.3,hspace=.5)
-plt.draw
-plt.show()
+theta = np.linspace(0.001,np.pi-0.001,num=40)
+phi = np.linspace(0.001,2*np.pi-0.001,num=40)
+swth(phi,theta,zf,freq)
 
 
 
+############################################
+# Plot splitting and width as a function of theta and phi
+# Use data acquired from swth()
+############################################
+def swplot():
+    freq = np.linspace(2.77e9,2.97e9,1e6)
+    zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
+    theta = np.linspace(0.001,np.pi,num=13)
+    phi = np.linspace(0.001,2*np.pi,num=17)
+    ##swth(phi,theta,zf,freq)
+
+    a1,a2,zfcentral,zfsplitting,zfwidth,zfoffset =\
+        np.loadtxt('coeffs.txt',delimiter=', ',unpack=True)
+
+    ##print zfsplitting.shape
+    ##print theta.shape
+    ##print phi.shape
+    fig = plt.figure(figsize=plt.figaspect(1.))
+
+    ax = fig.add_subplot(221)
+    X = np.degrees(phi)
+    Y = np.degrees(theta)
+    X, Y = np.meshgrid(X,Y)
+    Z = zfsplitting.reshape(len(theta),len(phi))
+    plt.contourf(X,Y,Z,100)
+    plt.colorbar()
+    ax.set_title('Splitting')
+    ax.set_xlabel('phi (degrees)')
+    ax.set_ylabel('theta (degrees)')
+
+    ax = fig.add_subplot(223)
+    X = np.degrees(phi)
+    Y = np.degrees(theta)
+    X, Y = np.meshgrid(X,Y)
+    Z = zfwidth.reshape(len(theta),len(phi))
+    plt.contourf(X,Y,Z,100)
+    plt.colorbar()
+    ax.set_title('Width')
+    ax.set_xlabel('phi (degrees)')
+    ax.set_ylabel('theta (degrees)')
+
+    ax = fig.add_subplot(222,projection='3d')
+    x = np.outer(np.cos(phi),np.sin(theta))
+    y = np.outer(np.sin(phi),np.sin(theta))
+    z = np.outer(np.ones(np.shape(phi)),np.cos(theta))
+    tmp = (zfsplitting.reshape(len(theta),len(phi))).T
+    tmp = (tmp-np.amin(tmp))/(np.amax(tmp)-np.amin(tmp))
+    ax.plot_surface(x,y,z, facecolors=cm.viridis(tmp))
+
+    ax = fig.add_subplot(224,projection='3d')
+    x = np.outer(np.cos(phi),np.sin(theta))
+    y = np.outer(np.sin(phi),np.sin(theta))
+    z = np.outer(np.ones(np.shape(phi)),np.cos(theta))
+    tmp = (zfwidth.reshape(len(theta),len(phi))).T
+    tmp = (tmp-np.amin(tmp))/(np.amax(tmp)-np.amin(tmp))
+    ax.plot_surface(x,y,z, facecolors=cm.viridis(tmp))
+
+    plt.subplots_adjust(wspace=.3,hspace=.5)
+    plt.draw
+    plt.show()
+##swplot()
 
 
+
+
+
+
+
+
+
+
+
+##fig = plt.figure()
+##ax = fig.add_subplot(111, projection='3d')
+##
+##u = np.linspace(0, 2 * np.pi, 80)
+##v = np.linspace(0, np.pi, 80)
+##
+### create the sphere surface
+##x=10 * np.outer(np.cos(u), np.sin(v))
+##y=10 * np.outer(np.sin(u), np.sin(v))
+##z=10 * np.outer(np.ones(np.size(u)), np.cos(v))
+##
+### simulate heat pattern (striped)
+##myheatmap = 10*np.abs(np.sin(y))
+##print x.shape
+##print y.shape
+##print z.shape
+##print myheatmap.shape
+##
+##ax.plot_surface(x, y, z, cstride=1, rstride=1, facecolors=cm.hot(myheatmap))
+##
+##plt.show()
