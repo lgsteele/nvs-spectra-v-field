@@ -215,7 +215,7 @@ def plotsplittings(phi,theta,zf):
 # Calculate splitting and width as a function of theta and phi
 ############################################
 def swth(phi,theta,zf,freq):
-    print datetime.datetime.now()
+##    print datetime.datetime.now()
     Bmag = np.array([200e-6])
     Bmag = Bmag.reshape(len(Bmag),1,1)
     Bxyz = s2c(theta,phi,Bmag)
@@ -234,9 +234,9 @@ def swth(phi,theta,zf,freq):
     freq = (base*freq)
     spectra = spectra.reshape((len(Bxyz)*len(Bxyz[0]),len(freq[1])))
     p0 = np.concatenate((a,a,zfcentral,zfsplitting,zfwidth,zfoffset),axis=1)
-    print freq.shape
-    print spectra.shape
-    print datetime.datetime.now()
+##    print freq.shape
+##    print spectra.shape
+##    print datetime.datetime.now()
 ##    print lor(freq,a,a,zfcentral,zfsplitting,zfwidth,zfoffset).shape
 ##    print a.shape
 ##    print zfcentral.shape
@@ -245,11 +245,12 @@ def swth(phi,theta,zf,freq):
 ##    print zfoffset.shape
 ##    print p0.shape
     coeffs = np.ones((len(Bxyz)*len(Bxyz[0]),len(p0[0])))
-    print coeffs.shape
+##    print coeffs.shape
     thetaphi = np.array([[x0,y0] for x0 in theta \
                       for y0 in phi])
+##    print thetaphi
     for i in range(0,len(coeffs),1):
-        print i
+##        print i
 ##        print thetaphi[i]
         coeffs[i], matcov = curve_fit(lor,freq[i],spectra[i],p0[i])
         yfit = lor(freq[i],coeffs[i,0],coeffs[i,1],coeffs[i,2],\
@@ -257,30 +258,58 @@ def swth(phi,theta,zf,freq):
 ##        print coeffs[i]
 ##        plt.plot(freq[i],spectra[i,:],'r-',freq[i],yfit,'b--')
 ##        plt.show()
-    np.savetxt('coeffs_t40p40.txt',coeffs,delimiter=', ')
-    print datetime.datetime.now()
+    return coeffs
+##    np.savetxt('coeffs_t%sp100.txt'%i,coeffs,delimiter=', ')
+##    print datetime.datetime.now()
 
-freq = np.linspace(2.77e9,2.97e9,1e6)
-zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
-theta = np.linspace(0.001,np.pi-0.001,num=40)
-phi = np.linspace(0.001,2*np.pi-0.001,num=40)
-swth(phi,theta,zf,freq)
+##theta = np.linspace(0.001,np.pi-0.001,num=70)
+##for i in range(0,len(theta),1):
+##    print str(i) + ': ' + str(datetime.datetime.now())
+##    freq = np.linspace(2.77e9,2.97e9,1e6)
+##    zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
+##    ##theta = np.linspace(0.001,np.pi-0.001,num=3)
+##    thetatmp = np.array([theta[i]])
+##    phi = np.linspace(0.0,2*np.pi,num=70,endpoint=False)
+##    coeffs = swth(phi,thetatmp,zf,freq)
+##    np.savetxt('coeffs_t%sp70.txt'%i,coeffs,delimiter=', ')
+
+##freq = np.linspace(2.77e9,2.97e9,1e6)
+##zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
+##theta = np.linspace(0.001,np.pi-0.001,num=3)
+##phi = np.linspace(0.001,2*np.pi,num=2,endpoint=False)
+##swth(phi,theta,zf,freq)
 
 
+"""
+thetaphi array structure:
+t1 - p1
+t1 - p2
+t2 - p1
+t2 - p2
+"""
+##a1,a2,central,splitting,width,offset = \
+##    np.loadtxt('coeffs_t0p70.txt',delimiter=', ',unpack=True)
+##array = np.column_stack((a1,a2,central,splitting,width,offset))
+##for i in range(1,70,1):
+##    a11,a21,central1,splitting1,width1,offset1 = \
+##        np.loadtxt('coeffs_t%sp70.txt'%i,delimiter=', ',unpack=True)
+##    tmp = np.column_stack((a11,a21,central1,splitting1,width1,offset1))
+##    array = np.concatenate((array,tmp))
+##np.savetxt('coeffs_B200t70sp70.txt',array,delimiter=', ')
 
 ############################################
 # Plot splitting and width as a function of theta and phi
 # Use data acquired from swth()
 ############################################
-def swplot():
+def swplot(filename):
     freq = np.linspace(2.77e9,2.97e9,1e6)
     zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
-    theta = np.linspace(0.001,np.pi,num=13)
-    phi = np.linspace(0.001,2*np.pi,num=17)
+    theta = np.linspace(0.001,np.pi,num=70)
+    phi = np.linspace(0.001,2*np.pi,num=70)
     ##swth(phi,theta,zf,freq)
 
     a1,a2,zfcentral,zfsplitting,zfwidth,zfoffset =\
-        np.loadtxt('coeffs.txt',delimiter=', ',unpack=True)
+        np.loadtxt('%s'%filename,delimiter=', ',unpack=True)
 
     ##print zfsplitting.shape
     ##print theta.shape
@@ -292,7 +321,7 @@ def swplot():
     Y = np.degrees(theta)
     X, Y = np.meshgrid(X,Y)
     Z = zfsplitting.reshape(len(theta),len(phi))
-    plt.contourf(X,Y,Z,100)
+    plt.contourf(X,Y,Z,100,cmap=cm.viridis)
     plt.colorbar()
     ax.set_title('Splitting')
     ax.set_xlabel('phi (degrees)')
@@ -303,7 +332,7 @@ def swplot():
     Y = np.degrees(theta)
     X, Y = np.meshgrid(X,Y)
     Z = zfwidth.reshape(len(theta),len(phi))
-    plt.contourf(X,Y,Z,100)
+    plt.contourf(X,Y,Z,100,cmap=cm.viridis)
     plt.colorbar()
     ax.set_title('Width')
     ax.set_xlabel('phi (degrees)')
@@ -316,6 +345,7 @@ def swplot():
     tmp = (zfsplitting.reshape(len(theta),len(phi))).T
     tmp = (tmp-np.amin(tmp))/(np.amax(tmp)-np.amin(tmp))
     ax.plot_surface(x,y,z, facecolors=cm.viridis(tmp))
+    ax.set_axis_off()
 
     ax = fig.add_subplot(224,projection='3d')
     x = np.outer(np.cos(phi),np.sin(theta))
@@ -323,12 +353,16 @@ def swplot():
     z = np.outer(np.ones(np.shape(phi)),np.cos(theta))
     tmp = (zfwidth.reshape(len(theta),len(phi))).T
     tmp = (tmp-np.amin(tmp))/(np.amax(tmp)-np.amin(tmp))
-    ax.plot_surface(x,y,z, facecolors=cm.viridis(tmp))
+    ax.plot_surface(x,y,z,facecolors=cm.viridis(tmp))
+    ax.set_axis_off()
 
     plt.subplots_adjust(wspace=.3,hspace=.5)
     plt.draw
-    plt.show()
-##swplot()
+    try:
+        plt.show()
+    except: KeyboardInterrupt
+    plt.close()
+swplot('coeffs_B200t70sp70.txt')
 
 
 
